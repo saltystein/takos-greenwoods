@@ -1762,8 +1762,9 @@
 
             // 4. CONFIRM SUBMIT
             window.confirmSubmitReport = () => {
+                // 1. Safety Check: Data loaded?
                 if (!window.currentReportData) {
-                    showModal('Error', '<p>Data not loaded yet.</p>', 'OK', hideModal, true);
+                    showModal('Error', '<p>Data not loaded yet. Please wait a moment.</p>', 'OK', hideModal, true);
                     return;
                 }
 
@@ -1772,29 +1773,34 @@
                 const title = modal.querySelector('h3');
                 const body = modal.querySelector('p');
                 const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
-                const headerBg = modal.querySelector('div:first-child'); // The colored header div
-                const icon = headerBg.querySelector('i');
+                
+                // TARGETING FIX:
+                // Instead of finding 'i' (which might be an svg now), we target the containers
+                const headerBg = modal.querySelector('div:first-child'); 
+                const iconContainer = headerBg.querySelector('div'); // The inner circle div
 
-                // 1. ERROR: Inputs not updated today
+                // 2. LOGIC: Determine State
+                let iconName = 'send';
+                
+                // STATE A: ERROR (Inputs not updated)
                 if (!status || !status.inputsUpdatedToday) {
-                    // Show Error Modal style
                     headerBg.className = "bg-red-600 p-4 flex justify-center";
-                    icon.setAttribute('data-lucide', 'alert-octagon');
+                    iconName = 'alert-octagon';
+                    
                     title.textContent = "Cannot Submit Yet";
                     title.className = "text-xl font-bold text-red-600 mb-2";
                     body.innerHTML = `
                         You have not updated the daily inputs for <b>TODAY</b> yet.<br><br>
                         Please enter BUO, MOD, Timpla, & Tira and click <b>"Update Record"</b> first.
                     `;
-                    // Hide the "Yes" button, only show Cancel/Close
-                    confirmBtn.classList.add('hidden');
+                    confirmBtn.classList.add('hidden'); // Hide submit button
                     modal.querySelector('button:first-child').textContent = "Close";
                 } 
-                // 2. WARNING: Report already exists (Overwrite)
+                // STATE B: WARNING (Report exists -> Overwrite)
                 else if (status.reportAlreadySubmitted) {
-                    // Show Warning Modal style
                     headerBg.className = "bg-orange-500 p-4 flex justify-center";
-                    icon.setAttribute('data-lucide', 'alert-triangle');
+                    iconName = 'alert-triangle';
+                    
                     title.textContent = "Report Already Exists";
                     title.className = "text-xl font-bold text-orange-600 mb-2";
                     body.innerHTML = `
@@ -1806,11 +1812,11 @@
                     confirmBtn.textContent = "Yes, Overwrite";
                     modal.querySelector('button:first-child').textContent = "Cancel";
                 } 
-                // 3. NORMAL: Standard Submission
+                // STATE C: NORMAL (Submit)
                 else {
-                    // Show Success/Green Modal style
                     headerBg.className = "bg-green-600 p-4 flex justify-center";
-                    icon.setAttribute('data-lucide', 'send');
+                    iconName = 'send';
+                    
                     title.textContent = "Submit Final Report?";
                     title.className = "text-xl font-bold text-gray-900 mb-2";
                     body.innerHTML = `
@@ -1823,7 +1829,12 @@
                     modal.querySelector('button:first-child').textContent = "Cancel";
                 }
 
-                lucide.createIcons();
+                // 3. RENDER ICON SAFELY
+                // We wipe the container and re-add the <i> tag to ensure Lucide picks it up correctly
+                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>`;
+                lucide.createIcons(); // Transform <i> to <svg>
+                
+                // 4. SHOW MODAL
                 modal.classList.remove('hidden');
             };
 
@@ -2462,3 +2473,4 @@
 </body>
 
 </html>
+
