@@ -1761,7 +1761,6 @@
             };
 
             // 4. CONFIRM SUBMIT
-            // --- UPDATED CONFIRMATION MODAL LOGIC ---
             window.confirmSubmitReport = () => {
                 // 1. Safety Check
                 if (!window.currentReportData) {
@@ -1771,18 +1770,20 @@
 
                 const status = window.currentReportData.status;
                 const modal = document.getElementById('confirm-submit-modal');
+                
+                // --- FIX: SELECT THE CORRECT ELEMENTS ---
+                // The Modal contains a Card (first child), which contains the Header (first child of card)
+                const card = modal.firstElementChild; 
+                const headerBg = card.firstElementChild; 
+                const iconContainer = headerBg.querySelector('div'); 
+                
                 const title = modal.querySelector('h3');
                 const body = modal.querySelector('p');
                 const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
                 const cancelBtn = modal.querySelector('button:first-child'); // The "Cancel" button
-                
-                // Target the header containers (assuming structure matches confirm-update-modal)
-                const headerBg = modal.querySelector('div:first-child'); 
-                const iconContainer = headerBg.querySelector('div'); 
 
                 let iconName = 'send';
                 let headerClass = "";
-                let confirmBtnClass = "";
 
                 // --- STATE A: ERROR (Inputs not updated today) ---
                 if (!status || !status.inputsUpdatedToday) {
@@ -1790,10 +1791,8 @@
                     iconName = 'alert-octagon';
                     
                     title.textContent = "Cannot Submit Yet";
-                    // Clean Black/Gray Text
                     title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.className = "text-sm text-gray-500 mb-6";
-                    body.innerHTML = `Daily inputs (BUO, Timpla, Tira) have NOT been updated for <b>TODAY</b> yet.<br>Please update the record first.`;
+                    body.innerHTML = `Daily inputs (BUO, Timpla, Tira) have NOT been updated for <b>TODAY</b> yet.<br><br><span class="text-red-600 font-bold">Please update the record first.</span>`;
                     
                     confirmBtn.classList.add('hidden'); // Hide "Yes"
                     cancelBtn.textContent = "Close";
@@ -1806,12 +1805,10 @@
                     
                     title.textContent = "Overwrite Existing Report?";
                     title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.className = "text-sm text-gray-500 mb-6";
-                    body.innerHTML = `A report for today already exists.<br>Do you want to <b>overwrite</b> it with this new data?`;
+                    body.innerHTML = `A report for today already exists.<br>Do you want to <b class="text-orange-600">overwrite</b> it with this new data?`;
                     
                     confirmBtn.classList.remove('hidden');
                     confirmBtn.textContent = "Yes, Overwrite";
-                    // Orange Button
                     confirmBtn.className = "px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center";
                     
                     cancelBtn.textContent = "Cancel";
@@ -1824,19 +1821,17 @@
                     
                     title.textContent = "Submit Final Report?";
                     title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.className = "text-sm text-gray-500 mb-6";
-                    body.innerHTML = `Are you sure you want to close the day? This will archive all sales and inventory data.`;
+                    body.innerHTML = `Are you sure you want to close the day?<br>This will archive all sales and inventory data.`;
                     
                     confirmBtn.classList.remove('hidden');
                     confirmBtn.textContent = "Yes, Submit";
-                    // Green Button
                     confirmBtn.className = "px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center";
                     
                     cancelBtn.textContent = "Cancel";
                     cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors";
                 }
 
-                // Apply Header Styles & Icon
+                // Apply Styles
                 headerBg.className = headerClass;
                 iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>`;
                 lucide.createIcons();
@@ -1858,8 +1853,6 @@
 
                 if (!window.currentReportData) return;
                 const d = window.currentReportData;
-                
-                // Get submitter name safely
                 const submitterName = sessionStorage.getItem('takos_fullname') || "User";
 
                 // 2. Send Data
@@ -1886,7 +1879,7 @@
                     btn.textContent = origText;
 
                     if(res.success) {
-                        // 3. SHOW SUCCESS MODAL (Reusing generic modal for consistency)
+                        // 3. SHOW SUCCESS MODAL (Reusing generic modal)
                         showModal(
                             'Report Saved', 
                             `<div class="flex flex-col items-center py-4">
@@ -2511,6 +2504,7 @@
 </body>
 
 </html>
+
 
 
 
