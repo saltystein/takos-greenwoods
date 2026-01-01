@@ -1770,79 +1770,82 @@
 
                 const status = window.currentReportData.status;
                 const modal = document.getElementById('confirm-submit-modal');
-                
-                // --- FIX: SELECT THE CORRECT ELEMENTS ---
-                // The Modal contains a Card (first child), which contains the Header (first child of card)
+                // We select the "Card" (the white box inside the modal backdrop)
                 const card = modal.firstElementChild; 
-                const headerBg = card.firstElementChild; 
-                const iconContainer = headerBg.querySelector('div'); 
-                
-                const title = modal.querySelector('h3');
-                const body = modal.querySelector('p');
-                const confirmBtn = modal.querySelector('button:last-child'); // The "Yes" button
-                const cancelBtn = modal.querySelector('button:first-child'); // The "Cancel" button
 
-                let iconName = 'send';
                 let headerClass = "";
+                let titleText = "";
+                let titleColor = "";
+                let iconName = "";
+                let bodyContent = "";
+                let confirmBtnHTML = "";
 
                 // --- STATE A: ERROR (Inputs not updated today) ---
                 if (!status || !status.inputsUpdatedToday) {
-                    headerClass = "bg-red-600 p-4 flex justify-center";
-                    iconName = 'alert-octagon';
-                    
-                    title.textContent = "Cannot Submit Yet";
-                    title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.innerHTML = `Daily inputs (BUO, Timpla, Tira) have NOT been updated for <b>TODAY</b> yet.<br><br><span class="text-red-600 font-bold">Please update the record first.</span>`;
-                    
-                    confirmBtn.classList.add('hidden'); // Hide "Yes"
-                    cancelBtn.textContent = "Close";
-                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors w-full";
+                    headerClass = "bg-red-600";
+                    iconName = "alert-octagon";
+                    titleText = "Cannot Submit Yet";
+                    titleColor = "text-red-600";
+                    bodyContent = `Daily inputs (BUO, Timpla, Tira) have NOT been updated for <b>TODAY</b> yet.<br><br><span class="text-red-600 font-bold">Please update the record first.</span>`;
+                    // No Confirm Button
+                    confirmBtnHTML = ``; 
                 } 
                 // --- STATE B: WARNING (Report exists -> Overwrite) ---
                 else if (status.reportAlreadySubmitted) {
-                    headerClass = "bg-orange-500 p-4 flex justify-center";
-                    iconName = 'alert-triangle';
+                    headerClass = "bg-orange-500";
+                    iconName = "alert-triangle";
+                    titleText = "Overwrite Existing Report?";
+                    titleColor = "text-gray-900";
+                    bodyContent = `A report for today already exists.<br>Do you want to <b class="text-orange-600">overwrite</b> it with this new data?`;
                     
-                    title.textContent = "Overwrite Existing Report?";
-                    title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.innerHTML = `A report for today already exists.<br>Do you want to <b class="text-orange-600">overwrite</b> it with this new data?`;
-                    
-                    confirmBtn.classList.remove('hidden');
-                    confirmBtn.textContent = "Yes, Overwrite";
-                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center";
-                    
-                    cancelBtn.textContent = "Cancel";
-                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors";
+                    confirmBtnHTML = `
+                    <button onclick="executeSubmitReport()" class="px-5 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg transition-colors flex items-center justify-center">
+                        Yes, Overwrite
+                    </button>`;
                 } 
                 // --- STATE C: NORMAL (Standard Submit) ---
                 else {
-                    headerClass = "bg-green-600 p-4 flex justify-center";
-                    iconName = 'send'; 
+                    headerClass = "bg-green-600";
+                    iconName = "send";
+                    titleText = "Submit Final Report?";
+                    titleColor = "text-gray-900";
+                    bodyContent = `Are you sure you want to close the day?<br>This will archive all sales and inventory data.`;
                     
-                    title.textContent = "Submit Final Report?";
-                    title.className = "text-xl font-bold text-gray-900 mb-2";
-                    body.innerHTML = `Are you sure you want to close the day?<br>This will archive all sales and inventory data.`;
-                    
-                    confirmBtn.classList.remove('hidden');
-                    confirmBtn.textContent = "Yes, Submit";
-                    confirmBtn.className = "px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center";
-                    
-                    cancelBtn.textContent = "Cancel";
-                    cancelBtn.className = "px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors";
+                    confirmBtnHTML = `
+                    <button onclick="executeSubmitReport()" class="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg transition-colors flex items-center justify-center">
+                        Yes, Submit
+                    </button>`;
                 }
 
-                // Apply Styles
-                headerBg.className = headerClass;
-                iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>`;
+                // 2. REBUILD THE CARD HTML (Forces Clean Layout)
+                card.className = "bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100";
+                card.innerHTML = `
+                    <div class="${headerClass} p-4 flex justify-center">
+                        <div class="bg-white/20 p-3 rounded-full">
+                            <i data-lucide="${iconName}" class="w-8 h-8 text-white"></i>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold ${titleColor} mb-2">${titleText}</h3>
+                        <p class="text-sm text-gray-500 mb-6">${bodyContent}</p>
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="document.getElementById('confirm-submit-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition-colors">
+                                ${(!status || !status.inputsUpdatedToday) ? 'Close' : 'Cancel'}
+                            </button>
+                            ${confirmBtnHTML}
+                        </div>
+                    </div>
+                `;
+
+                // 3. Render Icons & Show
                 lucide.createIcons();
-                
-                // Show Modal
                 modal.classList.remove('hidden');
             };
 
             //5. --- UPDATED SUBMISSION HANDLER WITH SUCCESS CONFIRMATION ---
             window.executeSubmitReport = () => {
                 const modal = document.getElementById('confirm-submit-modal');
+                // Since we rebuilt HTML, we find the last button in the card
                 const btn = modal.querySelector('button:last-child');
                 const origText = btn.textContent;
                 
@@ -1879,7 +1882,7 @@
                     btn.textContent = origText;
 
                     if(res.success) {
-                        // 3. SHOW SUCCESS MODAL (Reusing generic modal)
+                        // 3. SHOW SUCCESS MODAL
                         showModal(
                             'Report Saved', 
                             `<div class="flex flex-col items-center py-4">
@@ -1892,7 +1895,7 @@
                             'Done', 
                             () => {
                                 hideModal();
-                                loadReportData(); // Refresh data to update "Already Submitted" status
+                                loadReportData(); // Refresh data
                             }, 
                             true // Hide cancel button
                         );
@@ -2504,6 +2507,7 @@
 </body>
 
 </html>
+
 
 
 
